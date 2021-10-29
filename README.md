@@ -1,4 +1,4 @@
-# NPGREAT: NanoPore Guided REgional Assembly Tool ![image]()
+# NPGREAT: NanoPore Guided REgional Assembly Tool ![image](https://github.com/eleniadam/npgreat/blob/main/logo1.jpg?raw=true)
 
 NPGREAT is a hybrid assembly method that utilizes two complementary types of data for the assembly of the human subtelomere regions: The Linked-Reads & the ultralong Nanopore reads.
 
