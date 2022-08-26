@@ -544,68 +544,34 @@ for k in range(0, len(contig_order2), 1):
             order_graph[u].append(v)
 #print(order_graph)
 
+# Use networkX package for the graph
+import networkx as nx
 
+# Create graph
+DG = nx.DiGraph()
+# Add nodes
+DG.add_nodes_from(list(range(1,len(order_graph))))
+# Add edges
+for i in range(1, len(order_graph)):
+    #print(order_graph[i])
+    for k in range(0, len(order_graph[i])):
+        DG.add_edge(i, order_graph[i][k])
 
-# Functions to calculate the longest path in the graph
+#########################
+# Detect and fix cycles #
+#########################
+# Find cycles
+#len(list(nx.simple_cycles(DG)))
+#list(nx.simple_cycles(DG))
 
-def depthFirstSearch(node, pgraph, lpath, checked):
-    checked[node] = True
+# Remove erroneous edges to fix a cycle
+#DG.remove_edge()
 
-    for i in range(0, len(pgraph[node])):
-        if not checked[pgraph[node][i]]:
-            depthFirstSearch(pgraph[node][i], pgraph, lpath, checked)
-
-        lpath[node] = max(lpath[node], 1 + lpath[pgraph[node][i]])
-
-def printPath(node_mpath, pgraph, lpath, longest_path):
-    currlpath = 0
-    currlpath_node = 0
-    
-    longest_path.append(node_mpath)
-    #print("node: " + str(node_mpath))
-    
-    for i in range(0, len(pgraph[node_mpath])): 
-        if(lpath[pgraph[node_mpath][i]] >= currlpath):
-            currlpath = lpath[pgraph[node_mpath][i]]
-            currlpath_node = pgraph[node_mpath][i]
-    
-    if(len(pgraph[node_mpath]) == 0):
-        return
-    else:
-        printPath(currlpath_node, pgraph, lpath, longest_path)
-    
-    return
-
-# Function that returns the longest path
-def getLongestPath(pgraph, nodes):
-  
-    # Longest path of each node
-    lpath = [0]*(nodes + 1)
-    # Visited node
-    checked = [False]*(nodes + 1)
-     
-    # Depth First Search
-    for i in range(1, nodes + 1): 
-        if not checked[i]:
-            depthFirstSearch(i, pgraph, lpath, checked)
-    
-    # The first node of the longest path
-    curr = 0
-    node_curr = 0
-    for i in range(1, nodes + 1): 
-        if(lpath[i] > curr):
-            curr = lpath[i]
-            node_curr = i
-    
-    # The longest path
-    longest_path = []
-    printPath(node_curr, pgraph, lpath, longest_path)
-    
-    return longest_path
-
+#########################
+#########################
 
 # Find the longest path in the graph
-assembly_contig_order2 = getLongestPath(order_graph, n)
+assembly_contig_order2 = nx.dag_longest_path(DG)
 
 # Get the contig IDs
 inv_dict_unique_contigs = {x: y for y, x in dict_unique_contigs.items()}
