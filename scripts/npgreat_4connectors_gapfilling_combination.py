@@ -381,26 +381,40 @@ for i in range(0, len(assembly_contig_order_ids2)):
     if(i == 0):
         obs = df_aligns_maxpids.loc[df_aligns_maxpids['contig2'] == assembly_contig_order_ids2[i]]
         obs = obs.reset_index(drop=True)
-        if( (obs.empty) or (obs.loc[0, "nano"] == 'x') ):
+        ###
+        case_end = 0
+        if(obs.loc[0, "contig1"] == 'x'):
+            case_end = 0
+        if((len(obs) != 1) and (obs.loc[1, "contig1"] == 'x')): ##
+            case_end = 1
+        ###
+        if( (obs.empty) or (obs.loc[case_end, "nano"] == 'x') ):
             df_combined = df_combined.append({'piece': data_count, 'seq_id': 'x', 'coord1': 0, 'coord2': 0}, ignore_index=True)
         else:
-            df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[0, "nano"], 'coord1': obs.loc[0, "nanocoord1"], 'coord2': obs.loc[0, "nanocoord2"]}, ignore_index=True)    
+            df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[case_end, "nano"], 'coord1': obs.loc[case_end, "nanocoord1"], 'coord2': obs.loc[case_end, "nanocoord2"]}, ignore_index=True)    
         data_count = data_count + 1
     
     # Last contig extension (extension-2)
     if(i == len(assembly_contig_order_ids2)-1):
         obs = df_aligns_maxpids.loc[df_aligns_maxpids['contig1'] == assembly_contig_order_ids2[i]]
         obs = obs.reset_index(drop=True)
-        if( (obs.empty) or (obs.loc[0, "nano"] == 'x') ):
+        ###
+        case_end = 0
+        if(obs.loc[0, "contig2"] == 'x'):
+            case_end = 0
+        if((len(obs) != 1) and obs.loc[1, "contig2"] == 'x'):
+            case_end = 1
+        ###
+        if( (obs.empty) or (obs.loc[case_end, "nano"] == 'x') ):
             if(bovl == False):
-                df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[0, "contig1"], 'coord1': 0, 'coord2': 0}, ignore_index=True)
+                df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[case_end, "contig1"], 'coord1': 0, 'coord2': 0}, ignore_index=True)
                 data_count = data_count + 1
             df_combined = df_combined.append({'piece': data_count, 'seq_id': 'x', 'coord1': 0, 'coord2': 0}, ignore_index=True)
         else:
             if(bovl == False):
-                df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[0, "contig1"], 'coord1': 0, 'coord2': 0}, ignore_index=True)
+                df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[case_end, "contig1"], 'coord1': 0, 'coord2': 0}, ignore_index=True)
                 data_count = data_count + 1
-            df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[0, "nano"], 'coord1': obs.loc[0, "nanocoord1"], 'coord2': obs.loc[0, "nanocoord2"]}, ignore_index=True)    
+            df_combined = df_combined.append({'piece': data_count, 'seq_id': obs.loc[case_end, "nano"], 'coord1': obs.loc[case_end, "nanocoord1"], 'coord2': obs.loc[case_end, "nanocoord2"]}, ignore_index=True)    
         break
     
     # In between: connector or overlap
