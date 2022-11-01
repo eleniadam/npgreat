@@ -167,6 +167,7 @@ for k in range(0, len(df_splits.index), 1):
     
     # Number of alignments
     numAligns = df_zoom_splits.shape[0]
+   
         
     # Investigate alignments
     if (numAligns == 1):
@@ -174,18 +175,18 @@ for k in range(0, len(df_splits.index), 1):
         # No split
         continue
         
-    if (numAligns == 2 or numAligns > 3):
+    if (numAligns == 2): 
         contig_alA_end = df_zoom_splits.loc[0, 'send']
         contig_alB_start = df_zoom_splits.loc[1, 'sstart']
         nano_alA_end = df_zoom_splits.loc[0, 'qend']
         nano_alB_start = df_zoom_splits.loc[1, 'qstart']
         
-        # (i) - TR split
+        # TR split
         if ( (contig_alA_end > contig_alB_start) and (nano_alA_end <= nano_alB_start) ):
             #print(str(contig_alB_start) + " - " + str(contig_alA_end))
             df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alB_start, 'region_coord2': contig_alA_end}, ignore_index=True)
         
-        # (ii) - TR split
+        # TR split
         if( (contig_alA_end > contig_alB_start) and (nano_alA_end > nano_alB_start) ):
             # Nano rep region
             coord1 = nano_alB_start
@@ -209,17 +210,8 @@ for k in range(0, len(df_splits.index), 1):
             ethresh = 5
             
             if( len_close < len_nano_close ):
+                df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alA_end, 'region_coord2': contig_alA_end}, ignore_index=True)
                 
-                # (iii) - General split
-                if((len_close < ethresh)):
-                    #print(contig_alA_end)
-                    df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alA_end, 'region_coord2': contig_alA_end}, ignore_index=True)
-                
-                # (iv) - TR split
-                else:
-                    #print(str(contig_alA_end) + " - " + str(contig_alB_start))
-                    df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alA_end, 'region_coord2': contig_alB_start}, ignore_index=True)
-
 
     if (numAligns == 3):
         contig_alA_end = df_zoom_splits.loc[0, 'send']
@@ -232,26 +224,24 @@ for k in range(0, len(df_splits.index), 1):
         nano_alB_end = df_zoom_splits.loc[1, 'qend']
         nano_alC_start = df_zoom_splits.loc[2, 'qstart']
         
-        # (v) - TR split
+        # TR split
         if ( (contig_alA_end > contig_alB_start) and (nano_alA_end <= nano_alB_start) and (contig_alB_end > contig_alC_start) and (nano_alB_end <= nano_alC_start)):
             #print(str(contig_alB_start) + " - " + str(contig_alB_end))
             df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alB_start, 'region_coord2': contig_alB_end}, ignore_index=True)
     
-    ####
-        # Same as case above
-        elif( (contig_alA_end <= contig_alB_start) and (nano_alA_end < nano_alB_start) ):
-            len_close = contig_alB_start - contig_alA_end
-            len_nano_close = nano_alB_start - nano_alA_end
-            ethresh = 5
-            
-            if( len_close < len_nano_close ):
-                
-                # (iii) - General split
-                if((len_close < ethresh)):
-                    #print(contig_alA_end)
-                    df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_alA_end, 'region_coord2': contig_alA_end}, ignore_index=True)
-                
-    ####
+    if (numAligns > 3):
+        order_start = df_zoom_splits.sort_values(by=['sstart'], ascending=True)
+        order_start = order_start.reset_index(drop=True)
+        order_end = df_zoom_splits.sort_values(by=['send'], ascending=True)
+        order_end = order_end.reset_index(drop=True)
+        
+        contig_start_pos = order_start.loc[1, 'sstart']
+        contig_end_pos = order_end.loc[len(order_end)-2, 'send']
+        
+        # TR split
+        #print(str(contig_start_pos) + " - " + str(contig_end_pos))
+        df_splits_locs = df_splits_locs.append({'contig_id': df_splits['contig_id'][k], 'region_coord1': contig_start_pos, 'region_coord2': contig_end_pos}, ignore_index=True)
+
 
 df_splits_locs = df_splits_locs.sort_values(['contig_id', 'region_coord1'], ascending=True).reset_index(drop=True)
 df_splits_locs = df_splits_locs.astype({"region_coord1": int, "region_coord2": int})
@@ -528,9 +518,12 @@ unique_contigs = {x for y in contig_order2 for x in y}
 dict_unique_contigs = dict([(y,x+1) for x,y in enumerate(sorted(set(unique_contigs)))])
 #print(dict_unique_contigs)
 
+print("Creating the graph...")
+
 # Create the directed graph
 n = len(unique_contigs)
 order_graph = [[] for i in range(n + 1)]
+weights_graph = [[] for i in range(n + 1)] #
 
 # Iterate through every nano's contig order
 for k in range(0, len(contig_order2), 1):
@@ -542,7 +535,14 @@ for k in range(0, len(contig_order2), 1):
         # Add an edge only if it doesn't already exist
         if((v in order_graph[u]) == False):
             order_graph[u].append(v)
+            weights_graph[u].append(1)
+        # Otherwise, only update its weight
+        else: 
+            initial_weight = weights_graph[u][order_graph[u].index(v)]
+            weights_graph[u][order_graph[u].index(v)] = initial_weight + 1
+            
 #print(order_graph)
+#print(weights_graph)
 
 # Use networkX package for the graph
 import networkx as nx
@@ -555,21 +555,70 @@ DG.add_nodes_from(list(range(1,len(order_graph))))
 for i in range(1, len(order_graph)):
     #print(order_graph[i])
     for k in range(0, len(order_graph[i])):
-        DG.add_edge(i, order_graph[i][k])
+        DG.add_edge(i, order_graph[i][k], weight = weights_graph[i][k])
 
-#########################
-# Detect and fix cycles #
-#########################
 # Find cycles
-#len(list(nx.simple_cycles(DG)))
-#list(nx.simple_cycles(DG))
+#print(len(list(nx.simple_cycles(DG))))
+#print(list(nx.simple_cycles(DG)))
 
-# Remove erroneous edges to fix a cycle
-#DG.remove_edge()
+# If there is a cycle
+if(len(list(nx.simple_cycles(DG))) != 0): 
+    end_of_cycles = 0
+    
+    # Check each cycle
+    while(1):
+        gcycle = list(nx.simple_cycles(DG))[0]
+        
+        # Cycle edges
+        gcycle_edges = []
+        for ig in range(0, len(gcycle)):
+            if(ig != len(gcycle)-1):
+                gcycle_edges.append((gcycle[ig], gcycle[ig+1]))
+            else:
+                gcycle_edges.append((gcycle[ig], gcycle[0]))
+        #print(gcycle_edges)
+        
+        # Check each node in the cycle
+        for node_gcycle in gcycle:
+            
+            # Check the out-edges of each node
+            out_edges_of_node = DG.out_edges(node_gcycle, "weight", default=0)
+            list_edges = list(out_edges_of_node)
+            num_of_out_edges = len(list_edges)
+            
+            # If a node has more than one out edges
+            if (num_of_out_edges > 1):
+                #print(num_of_out_edges)
+                
+                # Keep the edge with the highest weight
+                max_w = 0
+                max_wedge = 0
+                for ledge in range(0, num_of_out_edges):
+                    if ((list_edges[ledge])[2] > max_w) :
+                        max_w = (list_edges[ledge])[2]
+                        max_wedge = ledge
+                
+                # Remove from the other out-edges the one which is in the cycle
+                for ledge in range(0, num_of_out_edges):
+                    edge_to_remove = ((list_edges[ledge])[0], (list_edges[ledge])[1])
+                    
+                    if ( (ledge != max_wedge) and ( edge_to_remove in gcycle_edges) ):
+                        DG.remove_edge((list_edges[ledge])[0], (list_edges[ledge])[1])
+                        #print("Removed edge: (" + str((list_edges[ledge])[0]) + "," + str((list_edges[ledge])[1]) + ")")
+                        
+                # Check if there are any more cycles
+                if(len(list(nx.simple_cycles(DG))) == 0):
+                    end_of_cycles = 1
+                    break
+        # No more cycles
+        if (end_of_cycles == 1):
+            #print("All cycles resolved.")
+            break
 
 #########################
 #########################
 
+print("Finding the longest path...")
 # Find the longest path in the graph
 assembly_contig_order2 = nx.dag_longest_path(DG)
 
@@ -608,5 +657,4 @@ with open(str(folder_loc_correction)+'/contig_order2.csv', 'w', newline='', enco
 
 
 print("The NPGREAT Correction step finished.")
-
 
