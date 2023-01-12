@@ -6,5 +6,6 @@ NPGREAT is a hybrid assembly method that utilizes two complementary types of dat
 The manual of NPGREAT, containing detailed istructions on how to use the tool is located [here](https://github.com/eleniadam/npgreat/blob/main/manual_npgreat.pdf)
 
 #### References
-E. Adam, T. Islam, D. Ranjan and H. Riethman, "Nanopore Guided Assembly of Segmental Duplications Near Telomeres", 2019 IEEE 19th International Conference on Bioinformatics and Bioengineering (BIBE), Athens, Greece, 2019, pp. 60-65. DOI: 10.1109/BIBE.2019.00020
+Adam, E., Ranjan, D. & Riethman, H. NPGREAT: assembly of human subtelomere regions with the use of ultralong nanopore reads and linked-reads. BMC Bioinformatics 23, 545 (2022). https://doi.org/10.1186/s12859-022-05081-3
+
 
